@@ -1,0 +1,206 @@
+# Dependencies and Setup
+%matplotlib inline
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+
+# Hide warning messages in notebook
+import warnings
+warnings.filterwarnings('ignore')
+
+# File to Load (Remember to Change These)
+mouse_dataload = "mouse_drugdata.csv"
+trial_dataload = "trial_data.csv"
+
+# Read the Mouse and Drug Data and the Clinical Trial Data
+mousedata_df = pd.read_csv(mouse_dataload)
+trialdata_df = pd.read_csv(trial_dataload)
+
+# Combine the data into a single dataset
+df_total = pd.merge(mousedata_df, trialdata_df, how='left', on=["Mouse ID", "Mouse ID"])
+
+# Display the data table for preview
+df_total.head()
+
+# Store the Mean Tumor Volume Data Grouped by Drug and Timepoint 
+tumorvolume_mean = df_total.groupby(["Drug", "Timepoint"]).mean()["Tumor Volume (mm3)"] 
+# Convert to DataFrame
+tumorvolumemean_df = pd.DataFrame(tumorvolume_mean)
+# Preview DataFrame
+tumorvolumemean_df.head()
+
+ # Store the Standard Error of Tumor Volumes Grouped by Drug and Timepoint
+tumorvolume_se = df_total.groupby(["Drug", "Timepoint"]).sem()["Tumor Volume (mm3)"]
+# Convert to DataFrame
+tumorvolumese_df = pd.DataFrame(tumorvolume_se)
+# Preview DataFrame
+tumorvolumese_df.head() 
+
+# Minor Data Munging to Re-Format the Data Frames
+# Perform index function
+tumorvolumemean_df = tumorvolumemean_df.reset_index()
+tumorvolumese_df = tumorvolumese_df.reset_index()
+# Perform pivot function
+tumorvolumemean_df_pivot = tumorvolumemean_df.pivot(index="Timepoint", columns="Drug")["Tumor Volume (mm3)"]
+tumorvolumese_df_pivot = tumorvolumese_df.pivot(index="Timepoint", columns="Drug")["Tumor Volume (mm3)"]
+# Preview that Reformatting worked
+tumorvolumese_df_pivot.head()
+
+# Generate the Plot (with Error Bars)
+plt.errorbar(tumorvolumemean_df_pivot.index, tumorvolumemean_df_pivot["Capomulin"], 
+             yerr=tumorvolumese_df_pivot["Capomulin"], color="b", marker="o", 
+             markersize=6, linestyle="dashed", linewidth=0.50, label="Capomulin")
+plt.errorbar(tumorvolumemean_df_pivot.index, tumorvolumemean_df_pivot["Infubinol"], 
+             yerr=tumorvolumese_df_pivot["Infubinol"], color="g", marker="^", 
+             markersize=6, linestyle="dashed", linewidth=0.50, label="Infubinol")
+plt.errorbar(tumorvolumemean_df_pivot.index, tumorvolumemean_df_pivot["Ketapril"], 
+             yerr=tumorvolumese_df_pivot["Ketapril"], color="k", marker="s", 
+             markersize=6, linestyle="dashed", linewidth=0.50, label="Ketapril")
+plt.errorbar(tumorvolumemean_df_pivot.index, tumorvolumemean_df_pivot["Placebo"], 
+             yerr=tumorvolumese_df_pivot["Placebo"], color="r", marker="d", 
+             markersize=6, linestyle="dashed", linewidth=0.50, label="Placebo")
+# Title
+plt.title("Tumor Response to Treatment")
+# Labels
+plt.ylabel("Tumor Volume (mm3)")
+plt.xlabel("Time (Days)")
+# Visual formatting
+plt.grid(True)
+plt.legend(loc="best", fontsize="medium", fancybox=True)
+# Save the Figure
+plt.savefig("part1.png")
+# Show the Figure
+plt.show()
+
+ Store the Mean Met. Site Data Grouped by Drug and Timepoint 
+metsite_mean = df_total.groupby(["Drug", "Timepoint"]).mean()["Metastatic Sites"]
+# Convert to DataFrame
+metsitemean_df = pd.DataFrame(metsite_mean)
+# Preview DataFrame
+metsitemean_df.head()
+
+# Store the Standard Error associated with Met. Sites Grouped by Drug and Timepoint 
+metsite_se = df_total.groupby(["Drug", "Timepoint"]).sem()["Metastatic Sites"]
+# Convert to DataFrame
+metsitese_df = pd.DataFrame(metsite_se)
+# Preview DataFrame
+metsitese_df.head()
+
+# Minor Data Munging to Re-Format the Data Frames
+# Perform index function
+metsitemean_df = metsitemean_df.reset_index()
+metsitese_df = metsitese_df.reset_index()
+# Perform pivot function
+metsitemean_df_pivot = metsitemean_df.pivot(index="Timepoint", columns="Drug")["Metastatic Sites"]
+metsitese_df_pivot = metsitese_df.pivot(index="Timepoint", columns="Drug")["Metastatic Sites"]
+# Preview that Reformatting worked
+metsitemean_df_pivot.head()
+
+
+# Generate the Plot (with Error Bars) containing the four studied medications;
+plt.errorbar(metsitemean_df_pivot.index, metsitemean_df_pivot["Capomulin"], 
+             yerr=metsitese_df_pivot["Capomulin"], color="b", marker="o", 
+             markersize=6, linestyle="dashed", linewidth=0.50, label="Capomulin")
+plt.errorbar(metsitemean_df_pivot.index, metsitemean_df_pivot["Infubinol"], 
+             yerr=metsitese_df_pivot["Infubinol"], color="g", marker="^", 
+             markersize=6, linestyle="dashed", linewidth=0.50, label="Infubinol")
+plt.errorbar(metsitemean_df_pivot.index, metsitemean_df_pivot["Ketapril"], 
+             yerr=metsitese_df_pivot["Ketapril"], color="k", marker="s", 
+             markersize=6, linestyle="dashed", linewidth=0.50, label="Ketapril")
+plt.errorbar(metsitemean_df_pivot.index, metsitemean_df_pivot["Placebo"], 
+             yerr=metsitese_df_pivot["Placebo"], color="r", marker="d", 
+             markersize=6, linestyle="dashed", linewidth=0.50, label="Placebo")
+# Title
+plt.title("Tumor Response to Treatment")
+# Labels
+plt.ylabel("Metastatic sites (mean)")
+plt.xlabel("Time (Days)")
+# Grid
+plt.grid(True)
+#Legend
+plt.legend(loc="best", fontsize="medium", fancybox=True)
+# Save the Figure
+plt.savefig("part2.png")
+# Show the Figure
+plt.show()
+
+# Store the Count of Mice Grouped by Drug and Timepoint (W can pass any metric)
+mice_count = df_total.groupby(["Drug", "Timepoint"]).count()["Mouse ID"]
+# Convert to DataFrame
+micecount_df = pd.DataFrame(mice_count)
+# Preview DataFrame
+micecount_df.head()
+
+# Minor Data Munging to Re-Format the Data Frame
+#Index function
+micecount_df = micecount_df.reset_index()
+#Pivot function
+micecountdf_pivot = micecount_df.pivot(index="Timepoint", columns="Drug")["Mouse ID"]
+# Preview the Data Frame
+micecountdf_pivot.head()
+
+# Generate the Plot (Accounting for percentages)
+plt.plot(micecountdf_pivot.index, micecountdf_pivot["Capomulin"]/25 * 100, color="r", 
+         marker="o", markersize=5, linestyle="dashed", linewidth=0.50, label="Capomulin")
+plt.plot(micecountdf_pivot.index, micecountdf_pivot["Infubinol"]/25 * 100, color="b", 
+         marker="^", markersize=5, linestyle="dashed", linewidth=0.50, label="Infubinol")
+plt.plot(micecountdf_pivot.index, micecountdf_pivot["Ketapril"]/25 * 100, color="g", 
+         marker="s", markersize=5, linestyle="dashed", linewidth=0.50, label="Ketapril")
+plt.plot(micecountdf_pivot.index, micecountdf_pivot["Placebo"]/25 * 100, color="y", 
+         marker="d", markersize=5, linestyle="dashed", linewidth=0.50, label="Placebo")
+# Title
+plt.title("Mice Reaction in Treatment")
+# Labels
+plt.ylabel("Number of mice alive")
+plt.xlabel("Time (Days)")
+# Grid
+plt.grid(True)
+#Legend
+plt.legend(loc="best", fontsize="medium", fancybox=True)
+# Save the Figure
+plt.savefig("part3.png")
+# Show the Figure
+plt.show()
+
+# Calculate the percent changes for each drug
+tumorpctchange =  ((tumorvolumemean_df_pivot.iloc[-1] - tumorvolumemean_df_pivot.iloc[0]) / 
+                   tumorvolumemean_df_pivot.iloc[0]) * 100
+# Display the data to confirm
+tumorpctchange
+
+ # Store all Relevant Percent Changes into a Tuple
+pctchanges = (tumorpctchange["Capomulin"], tumorpctchange["Infubinol"],
+               tumorpctchange["Ketapril"], tumorpctchange["Placebo"])
+# Splice the data between passing and failing drugs
+fig, ax = plt.subplots()
+ind = np.arange(len(pctchanges))  
+width = 1
+rectsPass = ax.bar(ind[0], pctchanges[0], width, color='green', edgecolor="black", linewidth=2, zorder=3)
+rectsFail = ax.bar(ind[1:], pctchanges[1:], width, color='red', edgecolor="black", linewidth=2, zorder=3)
+# Orient widths. Add labels, tick marks, etc. 
+ax.set_title("Tumor Change Over 45 Days")
+ax.set_ylabel("Tumor Volume Change (%)")
+ax.set_ylim([-35,65])
+ax.set_autoscaley_on(False)
+ax.grid(zorder=0)
+#Position ticks and labels,
+ax.set_xticklabels(("Capomulin", "Infubinol", "Ketapril", "Placebo"))
+ax.set_xticks(ind)
+# Use functions to label the percentages of changes
+def autolabelPass(rects):
+    for rect in rects:
+        height = rect.get_height()
+        ax.text(rect.get_x() + rect.get_width()/2., -7,
+        '%d%% ' % int(height), ha='center', va='bottom', color="black")
+def autolabelFail(rects):
+    for rect in rects:
+        height = rect.get_height()
+        ax.text(rect.get_x() + rect.get_width()/2., 2,
+                '%d%%' % int(height), ha='center', va='bottom', color="black")
+# Call functions to implement the function calls
+autolabelPass(rectsPass)
+autolabelFail(rectsFail)
+# Save the Figure
+fig.savefig("part4.png")
+# Show the Figure
+fig.show()
